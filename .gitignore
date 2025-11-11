@@ -1,0 +1,24 @@
+# === Node.js / Express ===
+node_modules/
+.env
+dist/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+
+# === Flutter / Dart ===
+build/
+.dart_tool/
+.packages
+.pub-cache/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# === OS / Editor garbage ===
+*.iml
+*.tmp
+*.swp

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jai Sabai - Solution Concept</title>
+    <style>
+        /* CSS Styling for the Slide */
+        .slide-container {
+            font-family: 'Arial', sans-serif;
+            background-color: #0d122b; /* Dark Blue Background (Theme) */
+            color: #ffffff;
+            padding: 50px;
+            width: 100%;
+            min-height: 100vh;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .slide-title {
+            color: #00d2ff; /* Bright Accent Color */
+            text-align: center;
+            font-size: 3em;
+            margin-bottom: 5px;
+        }
+
+        .slide-subtitle {
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 50px;
+            color: #cccccc;
+        }
+
+        /* Center Solution Box and Mock-up Area */
+        .solution-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+
+        .center-box {
+            background-color: #5d677a; /* Gray/Silver tone */
+            color: #ffffff;
+            padding: 40px 20px;
+            width: 150px;
+            height: 150px;
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            line-height: 1.2;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.5); 
+            /* Placeholder for Mock-up Images */
+        }
+        
+        .center-box::before {
+            content: "MY SOLUTION: JAI SABAI"; /* Display text in the center */
+            display: block;
+            font-size: 0.9em;
+            color: #ffcc00;
+            margin-bottom: 5px;
+            font-weight: normal;
+        }
+
+        /* Feature Grid and Boxes */
+        .feature-grid {
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 600px; 
+        }
+
+        .feature-box {
+            position: absolute;
+            width: 40%;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .feature-box h3 {
+            font-size: 1.5em;
+            margin-top: 0;
+            color: #00d2ff;
+        }
+
+        .feature-box p {
+            font-size: 1.1em;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+
+        .feature-box .usage-note {
+            font-size: 0.9em;
+            color: #e0e0e0;
+            font-weight: normal;
+        }
+
+        .icon-label {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        /* Positioning */
+        .top-left { top: 0; left: 0; }
+        .top-right { top: 0; right: 0; }
+        .bottom-left { bottom: 0; left: 0; }
+        .bottom-right { bottom: 0; right: 0; }
+
+        /* Color Themes */
+        .V-color { background-color: #2a346e; border-left: 5px solid #ff9900; }
+        .A-color { background-color: #3b2a6e; border-right: 5px solid #ff0099; }
+        .C-color { background-color: #2a6e62; border-bottom: 5px solid #00ff66; }
+
+        /* Presentation script area (For presenter notes) - Can be hidden in final view */
+        .script-note {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.5);
+            font-size: 0.8em;
+            color: #999999;
+            text-align: left;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="slide-container">
+    <h1 class="slide-title">🛠️ SOLUTION CONCEPT (Recap)</h1>
+    <h2 class="slide-subtitle">JAI SABAI: 4 เสาหลักของ Smart Alzheimer Care ที่ "อบอุ่นและฉลาด"</h2>
+
+    <div class="solution-center">
+        <div class="center-box">MOCK-UP<br>Device + Camera</div>
+    </div>
+
+    <div class="feature-grid">
+        <div class="feature-box V-color top-left">
+            <div class="icon-label">🗣️ V (Device)</div>
+            <h3>เพื่อนคุยกระตุ้นความจำ</h3>
+            <p><strong>Voice Interaction (Thai & Isan)</strong></p>
+            <p class="usage-note">ใช้งาน: พูดคุยกับ Device ด้วยภาษาท้องถิ่น สร้าง Companionship</p>
+        </div>
+
+        <div class="feature-box A-color top-right">
+            <div class="icon-label">🧠 A (Device)</div>
+            <h3>เกมฝึกสมองเฉพาะบุคคล</h3>
+            <p><strong>AI Cognitive Exercise</strong></p>
+            <p class="usage-note">ใช้งาน: เล่นเกมทบทวนความจำพื้นฐาน (Ask & Answer) บน Device</p>
+        </div>
+
+        <div class="feature-box C-color bottom-left">
+            <div class="icon-label">🛡️ C (Camera)</div>
+            <h3>ความปลอดภัยอัจฉริยะ</h3>
+            <p><strong>CCTV-based Detection</strong></p>
+            <p class="usage-note">ใช้งาน: กล้อง AI ตรวจจับการพลัดหลง/Wandering **ไม่ต้องสวมใส่เครื่องมือ**</p>
+        </div>
+
+        <div class="feature-box C-color bottom-right">
+            <div class="icon-label">📊 C (App)</div>
+            <h3>ศูนย์ควบคุมผู้ดูแล</h3>
+            <p><strong>Caregiver Dashboard</strong></p>
+            <p class="usage-note">ใช้งาน: ดู Mood, Activity, Safety Log และตั้งค่า Medication Reminders จากระยะไกล</p>
+        </div>
+    </div>
+    
+    <div class="script-note">
+        <strong>สคริปต์พูด (สำหรับผู้นำเสนอ):</strong><br>
+        "Jai Sabai ใช้ AI ผสานกับอุปกรณ์พื้นฐาน (Device + Camera) โดยแบ่งเป็น 4 แกนหลัก... (พูดเน้นที่การใช้งาน V > A > C > C และปิดท้ายด้วยการเชื่อมไป Value Pro)"
+    </div>
+</div>
+
+</body>
+</html>
