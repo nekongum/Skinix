@@ -43,7 +43,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 20),
               const CircleAvatar(
                 radius: 50,
-                backgroundImage: AssetImage('assets/images/profile.jpg'),
+                backgroundImage: AssetImage('assets/profile.jpg'),
               ),
               TextButton(
                 onPressed: () {

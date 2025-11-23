@@ -9,48 +9,59 @@ class ScanningScreen extends StatefulWidget {
   State<ScanningScreen> createState() => _ScanningScreenState();
 }
 
-class _ScanningScreenState extends State<ScanningScreen> with SingleTickerProviderStateMixin {
+class _ScanningScreenState extends State<ScanningScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   double progressValue = 0;
+  bool _waitingScan = true;
 
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 20), // ยืดระยะเผื่อ scan ช้าหรือเน็ตช้า
     )..addListener(() {
-        setState(() {
-          progressValue = _controller.value;
-        });
+      setState(() {
+        progressValue = _controller.value;
       });
+    });
 
     _controller.forward();
 
-    _controller.addStatusListener((status) async {
-      if (status == AnimationStatus.completed && mounted) {
-        // Fetch AS7341 mock sensor data from API
-        try {
-          final api = ApiService();
-          final sensorData = await api.fetchMockSensorData();
-          if (mounted) {
-            Navigator.pushReplacementNamed(
-              context, 
-              '/result',
-              arguments: sensorData, // Pass the sensor data to result screen
-            );
-          }
-        } catch (e) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Failed to get sensor data!'))
-            );
-            Navigator.pop(context);
-          }
-        }
-      }
-    });
+    // เมื่อเข้าสู่หน้า ให้ยิง HTTP ขอ scan sensor ทันที
+    _triggerScan();
+  }
+
+  Future<void> _triggerScan() async {
+    try {
+      // Call API scan endpoint (แก้ตาม url/service ของคุณ)
+      final api = ApiService();
+      final sensorData =
+          await api.fetchSensorData(); // <- ตรงนี้ต้องเป็นเรียกจริง ไม่ใช่ mock
+
+      if (!mounted) return;
+      _controller.animateTo(
+        1.0,
+        duration: const Duration(milliseconds: 600),
+      ); // ให้ progress วิ่งจบไว
+
+      setState(() {
+        _waitingScan = false;
+      });
+
+      Navigator.pushReplacementNamed(
+        context,
+        '/result',
+        arguments: sensorData, // ทั้ง object จาก fetchSensorData()
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to get sensor data: $e')));
+      Navigator.pop(context);
+    }
   }
 
   @override
@@ -70,9 +81,11 @@ class _ScanningScreenState extends State<ScanningScreen> with SingleTickerProvid
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  "Analyzing your skin tone...",
-                  style: TextStyle(
+                Text(
+                  _waitingScan
+                      ? "Analyzing your skin tone..."
+                      : "Scan completed!",
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.w500,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/bottom_nav.dart';
 import '../theme/app_colors.dart';
+import '../utils/monk_skin_tones.dart';
 import 'dart:math';
 
 class ResultScreen extends StatefulWidget {
@@ -13,70 +14,76 @@ class ResultScreen extends StatefulWidget {
 class _ResultScreenState extends State<ResultScreen> {
   Map<String, dynamic>? result;
   bool loading = true;
+  int matchedIndex = 0; // index เฉดที่ match ใน monkSkinTones
 
   @override
-  void initState() {
-    super.initState();
-    _loadMockResult(); // ✅ ใช้ข้อมูลจำลองแทน API
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // รับ arguments จากหน้าก่อน (ควรส่ง lab: { l, a, b })
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args != null && args is Map<String, dynamic> && args['lab'] != null) {
+      final lab = args['lab'];
+      final L = (lab['l'] as num).toDouble();
+      final a = (lab['a'] as num).toDouble();
+      final b = (lab['b'] as num).toDouble();
+
+      // หาเฉด skin tone ที่ใกล้ที่สุด
+      matchedIndex = _findNearestMonkSkinTone(L, a, b);
+
+      setState(() {
+        result = {
+          'L': L,
+          'a': a,
+          'b': b,
+          'monk_hex': monkSkinTones[matchedIndex]['hex'],
+          'monk_index': matchedIndex + 1, // index เริ่มที่ 1 เพื่อให้ human-friendly
+        };
+        loading = false;
+      });
+    } else {
+      _loadMockResult();
+    }
   }
 
-  /// 🎨 จำลองข้อมูลผลการสแกน (แทนการโหลดจาก backend)
+  /// ถ้าไม่ได้ argument/ยิง api fail จะ fallback มาที่ mock data
   Future<void> _loadMockResult() async {
-    await Future.delayed(const Duration(seconds: 1)); // หน่วงเวลาให้ดูเหมือนโหลด
+    await Future.delayed(const Duration(seconds: 1));
+    matchedIndex = 0;
     setState(() {
       result = {
-        'L': 72.5,
-        'a': 15.3,
-        'b': 22.8,
-        'shade_code': 'SF-02',
-        'shade': 'Warm Beige',
-        'undertone': 'Warm (Yellow)',
+        'L': monkSkinTones[matchedIndex]['L'],
+        'a': monkSkinTones[matchedIndex]['a'],
+        'b': monkSkinTones[matchedIndex]['b'],
+        'monk_hex': monkSkinTones[matchedIndex]['hex'],
+        'monk_index': matchedIndex + 1,
       };
       loading = false;
     });
   }
 
-  /// 🎨 คำนวณสูตร pigment จากค่า L*a*b*
-  Map<String, double> _calculatePigment(double L, double a, double b) {
-    double lightness = (L / 100).clamp(0, 1);
-    double redness = ((a + 128) / 255).clamp(0, 1);
-    double yellowness = ((b + 128) / 255).clamp(0, 1);
-
-    double white = lightness * 60 + (1 - redness) * 10;
-    double red = redness * 30;
-    double yellow = yellowness * 25;
-    double brown = (1 - lightness) * 20;
-    double black = max(0, 100 - (white + red + yellow + brown));
-
-    double total = white + red + yellow + brown + black;
-    return {
-      'white': (white / total * 100),
-      'red': (red / total * 100),
-      'yellow': (yellow / total * 100),
-      'brown': (brown / total * 100),
-      'black': (black / total * 100),
-    };
-  }
-
-  /// 🧪 เมื่อกด Mix Now (จำลองการไปหน้า mixing)
-  void _onMixNowPressed() {
-    if (result == null) return;
-
-    final L = result!['L'].toDouble();
-    final a = result!['a'].toDouble();
-    final b = result!['b'].toDouble();
-
-    final formula = _calculatePigment(L, a, b);
-    print('🎨 Simulated Pigment Formula: $formula');
-
-    Navigator.pushNamed(context, '/mixing');
+  /// หา index เฉดผิวใน monkSkinTones ที่ใกล้เคียงสุดจาก LAB ที่รับมา
+  int _findNearestMonkSkinTone(double L, double a, double b) {
+    int resultIndex = 0;
+    double minDist = double.infinity;
+    for (int i = 0; i < monkSkinTones.length; i++) {
+      final tone = monkSkinTones[i];
+      final d = sqrt(
+        pow(L - tone['L'], 2) +
+        pow(a - tone['a'], 2) +
+        pow(b - tone['b'], 2)
+      );
+      if (d < minDist) {
+        minDist = d;
+        resultIndex = i;
+      }
+    }
+    return resultIndex;
   }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final cardHeight = screenHeight * 0.55;
-
     return Scaffold(
       bottomNavigationBar: const BottomNavBar(currentIndex: 1),
       body: SafeArea(
@@ -98,6 +105,7 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   Widget _resultCard(BuildContext context, double cardHeight) {
+    final monk = monkSkinTones[matchedIndex];
     return Center(
       child: Container(
         width: MediaQuery.of(context).size.width * 0.8,
@@ -126,25 +134,19 @@ class _ResultScreenState extends State<ResultScreen> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-
-            // 🟤 สีจำลองจาก LAB
+            // Preview color จาก monkSkinTones
             Container(
               height: 130,
               width: 130,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _labToColor(
-                  result!['L'].toDouble(),
-                  result!['a'].toDouble(),
-                  result!['b'].toDouble(),
-                ),
+                color: monk['color'] as Color,
               ),
             ),
-
             Column(
               children: [
                 Text(
-                  "${result!['shade_code']} ${result!['shade']}",
+                  "Tone #${result!['monk_index']} HEX: ${result!['monk_hex']}",
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
@@ -153,7 +155,7 @@ class _ResultScreenState extends State<ResultScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "Undertone: ${result!['undertone']}",
+                  "LAB: L*: ${result!['L']}, a*: ${result!['a']}, b*: ${result!['b']}",
                   style: const TextStyle(
                     color: AppColors.textDark,
                     fontSize: 14,
@@ -161,13 +163,12 @@ class _ResultScreenState extends State<ResultScreen> {
                 ),
               ],
             ),
-
             ElevatedButton(
               onPressed: _onMixNowPressed,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryBrown,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 40, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -188,19 +189,16 @@ class _ResultScreenState extends State<ResultScreen> {
     );
   }
 
-  /// 🎨 แปลง LAB → RGB แบบคร่าว ๆ
-  Color _labToColor(double L, double a, double b) {
-    final r = (L + a * 1.1).clamp(0, 100);
-    final g = (L - 0.3 * a - 0.6 * b).clamp(0, 100);
-    final bl = (L + b * 1.2).clamp(0, 100);
+void _onMixNowPressed() {
+  Navigator.pushNamed(
+    context,
+    '/mixing',
+    arguments: {
+      'matchedIndex': matchedIndex, // ส่ง matchedIndex
+    },
+  );
+}
 
-    return Color.fromARGB(
-      255,
-      (r / 100 * 255).toInt(),
-      (g / 100 * 255).toInt(),
-      (bl / 100 * 255).toInt(),
-    );
-  }
 
   Widget _header() {
     return Container(
@@ -211,7 +209,7 @@ class _ResultScreenState extends State<ResultScreen> {
         children: const [
           CircleAvatar(
             radius: 30,
-            backgroundImage: AssetImage('assets/images/profile.jpg'),
+            backgroundImage: AssetImage('assets/profile.jpg'),
           ),
           SizedBox(width: 12),
           Column(
