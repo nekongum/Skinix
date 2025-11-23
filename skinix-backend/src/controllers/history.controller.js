@@ -1,4 +1,4 @@
-import UserMixHistory from '../models/UserMixHistory.model.js';
+npm rund evimport UserMixHistory from '../models/UserMixHistory.model.js';
 
 export const saveHistory = async (req, res) => {
   try {
