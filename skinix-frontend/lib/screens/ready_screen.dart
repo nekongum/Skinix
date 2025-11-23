@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../widgets/bottom_nav.dart';
 import '../theme/app_colors.dart';
+import '../utils/monk_skin_tones.dart';
+import '../models/color_history.dart';
 
 class ReadyScreen extends StatefulWidget {
   const ReadyScreen({super.key});
@@ -12,31 +14,59 @@ class ReadyScreen extends StatefulWidget {
 class _ReadyScreenState extends State<ReadyScreen> {
   Map<String, dynamic>? mix;
   bool loading = true;
+  int matchedIndex = 0;
 
   @override
-  void initState() {
-    super.initState();
-    _loadMockMix(); // ✅ ใช้ mock data แทน API
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final args = ModalRoute.of(context)?.settings.arguments;
+
+    if (args != null &&
+        args is Map<String, dynamic> &&
+        args.containsKey('matchedIndex') &&
+        args['matchedIndex'] != null) {
+
+      matchedIndex = args['matchedIndex'];
+
+      if (matchedIndex < 0 || matchedIndex >= monkSkinTones.length) {
+        matchedIndex = 0;
+      }
+
+      final tone = monkSkinTones[matchedIndex];
+
+      setState(() {
+        mix = {
+          'shade_code': "Tone-${matchedIndex + 1}",
+          'shade': "Monk Shade",
+          'undertone': "Neutral",
+          'color': tone['color'],
+          'hex': tone['hex'],
+          'L': tone['L'],
+          'a': tone['a'],
+          'b': tone['b'],
+        };
+        loading = false;
+      });
+    } else {
+      _loadMockMix();
+    }
   }
 
-  /// 🎨 จำลองข้อมูลการผสมล่าสุด
   Future<void> _loadMockMix() async {
-    await Future.delayed(const Duration(seconds: 1)); // จำลองโหลดข้อมูล
+    await Future.delayed(const Duration(seconds: 1));
+    final tone = monkSkinTones[0];
+
     setState(() {
       mix = {
-        'L': 68.0,
-        'a': 14.0,
-        'b': 20.5,
-        'shade_code': 'SF-03',
-        'shade': 'Natural Beige',
-        'undertone': 'Neutral',
-        'formula': {
-          'white': 25.0,
-          'red': 20.0,
-          'yellow': 30.0,
-          'brown': 15.0,
-          'black': 10.0,
-        },
+        'shade_code': "Tone-1",
+        'shade': "Monk Shade",
+        'undertone': "Neutral",
+        'color': tone['color'],
+        'hex': tone['hex'],
+        'L': tone['L'],
+        'a': tone['a'],
+        'b': tone['b'],
       };
       loading = false;
     });
@@ -61,12 +91,6 @@ class _ReadyScreenState extends State<ReadyScreen> {
       );
     }
 
-    final color = _labToColor(
-      mix!['L']?.toDouble() ?? 70,
-      mix!['a']?.toDouble() ?? 0,
-      mix!['b']?.toDouble() ?? 0,
-    );
-
     return Scaffold(
       bottomNavigationBar: const BottomNavBar(currentIndex: 1),
       body: SafeArea(
@@ -79,8 +103,8 @@ class _ReadyScreenState extends State<ReadyScreen> {
                 child: Container(
                   width: MediaQuery.of(context).size.width * 0.8,
                   height: cardHeight,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24, vertical: 28),
                   decoration: BoxDecoration(
                     color: AppColors.cream,
                     borderRadius: BorderRadius.circular(24),
@@ -109,7 +133,7 @@ class _ReadyScreenState extends State<ReadyScreen> {
                         height: 120,
                         width: 120,
                         decoration: BoxDecoration(
-                          color: color,
+                          color: mix!['color'],
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -166,20 +190,7 @@ class _ReadyScreenState extends State<ReadyScreen> {
     );
   }
 
-  /// 🎨 แปลง LAB → RGB แบบคร่าว ๆ
-  Color _labToColor(double L, double a, double b) {
-    final r = (L + a * 1.1).clamp(0, 100);
-    final g = (L - 0.3 * a - 0.6 * b).clamp(0, 100);
-    final bl = (L + b * 1.2).clamp(0, 100);
-    return Color.fromARGB(
-      255,
-      (r / 100 * 255).toInt(),
-      (g / 100 * 255).toInt(),
-      (bl / 100 * 255).toInt(),
-    );
-  }
-
-  /// 💾 Popup จำลองสำหรับบันทึกข้อมูล
+  /// 💾 Popup บันทึกข้อมูล
   void _showSaveDialog(BuildContext context) {
     final TextEditingController nameCtrl = TextEditingController();
 
@@ -187,8 +198,8 @@ class _ReadyScreenState extends State<ReadyScreen> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: AppColors.cream,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20)),
         title: const Text("Enter your name"),
         content: TextField(
           controller: nameCtrl,
@@ -206,10 +217,22 @@ class _ReadyScreenState extends State<ReadyScreen> {
             child: ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
+
+                // ⭐ Save เข้า repo
+                if (mix != null) {
+                  ColorHistoryRepo.addHistory({
+                    "name": nameCtrl.text.isEmpty ? "Guest" : nameCtrl.text,
+                    "tone": mix!['shade'],
+                    "hex": mix!['hex'],
+                    "lab": "(${mix!['L']}, ${mix!['a']}, ${mix!['b']})",
+                    "date": DateTime.now().toIso8601String().substring(0,10),
+                    "color": mix!['color'],
+                  });
+                }
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(
-                        "💾 Saved successfully for ${nameCtrl.text.isEmpty ? "Guest" : nameCtrl.text}!"),
+                    content: Text("💾 Saved successfully for ${nameCtrl.text.isEmpty ? "Guest" : nameCtrl.text}!"),
                     backgroundColor: AppColors.primaryBrown,
                   ),
                 );
@@ -222,8 +245,7 @@ class _ReadyScreenState extends State<ReadyScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: const Text("Save",
-                  style: TextStyle(color: Colors.white)),
+              child: const Text("Save", style: TextStyle(color: Colors.white)),
             ),
           ),
         ],
@@ -231,7 +253,6 @@ class _ReadyScreenState extends State<ReadyScreen> {
     );
   }
 
-  /// 🧍 Header ด้านบน
   Widget _header() {
     return Container(
       color: AppColors.primaryBrown,
@@ -241,7 +262,7 @@ class _ReadyScreenState extends State<ReadyScreen> {
         children: const [
           CircleAvatar(
             radius: 30,
-            backgroundImage: AssetImage('assets/images/profile.jpg'),
+            backgroundImage: AssetImage('assets/profile.jpg'),
           ),
           SizedBox(width: 12),
           Column(

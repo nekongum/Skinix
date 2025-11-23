@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../widgets/bottom_nav.dart';
+import '../models/color_history.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -12,55 +13,32 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   final TextEditingController _searchCtrl = TextEditingController();
 
-  // 🧴 Mock data (สามารถเปลี่ยนเป็นข้อมูลจาก backend ได้)
-  final List<Map<String, dynamic>> _allHistory = [
-    {
-      "name": "Pimmy",
-      "tone": "Beige Glow",
-      "hex": "#E6C8A8",
-      "lab": "(78, 3.2, 18.5)",
-      "date": "2025-10-27",
-      "color": const Color(0xFFE6C8A8),
-    },
-    {
-      "name": "Pimmy",
-      "tone": "Porcelain",
-      "hex": "#F1E0D6",
-      "lab": "(85, 2, 12)",
-      "date": "2025-10-25",
-      "color": const Color(0xFFF1E0D6),
-    },
-    {
-      "name": "Pimmy",
-      "tone": "Golden Tan",
-      "hex": "#D2A679",
-      "lab": "(65, 8, 24)",
-      "date": "2025-10-21",
-      "color": const Color(0xFFD2A679),
-    },
-  ];
-
   List<Map<String, dynamic>> _filteredHistory = [];
 
   @override
   void initState() {
     super.initState();
-    _filteredHistory = List.from(_allHistory);
+    _loadHistory();
   }
 
-  // 🔍 ฟังก์ชันค้นหา
-  void _filterSearch(String query) {
+  void _loadHistory() {
     setState(() {
-      _filteredHistory = _allHistory.where((item) {
+      _filteredHistory = ColorHistoryRepo.getHistory();
+    });
+  }
+
+  void _filterSearch(String query) {
+    final allHistory = ColorHistoryRepo.getHistory();
+    setState(() {
+      _filteredHistory = allHistory.where((item) {
         final lowerQuery = query.toLowerCase();
         return item["name"].toLowerCase().contains(lowerQuery) ||
-            item["tone"].toLowerCase().contains(lowerQuery) ||
-            item["date"].toLowerCase().contains(lowerQuery);
+               item["tone"].toLowerCase().contains(lowerQuery) ||
+               item["date"].toLowerCase().contains(lowerQuery);
       }).toList();
     });
   }
 
-  // 📅 ฟังก์ชันกรองด้วยวันที่
   Future<void> _filterByDate() async {
     final selectedDate = await showDatePicker(
       context: context,
@@ -84,8 +62,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     if (selectedDate != null) {
       final formatted = "${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}";
+      final allHistory = ColorHistoryRepo.getHistory();
       setState(() {
-        _filteredHistory = _allHistory
+        _filteredHistory = allHistory
             .where((item) => item["date"].contains(formatted))
             .toList();
       });
@@ -173,7 +152,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 10),
 
             // 🔹 History List

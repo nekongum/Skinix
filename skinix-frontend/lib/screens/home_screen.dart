@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../widgets/bottom_nav.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class TipCard extends StatelessWidget {
   final IconData icon;
@@ -88,23 +90,47 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _startScan() async {
-    if (_isLoading) return;
-    setState(() => _isLoading = true);
+Future<void> _startScan() async {
+  if (_isLoading) return;
+  setState(() => _isLoading = true);
 
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Scanning started... redirecting!'),
-        backgroundColor: AppColors.successGreen,
-      ),
+  try {
+    // ปรับ URL ตาม backend จริง
+    final response = await http.post(
+      Uri.parse('http://localhost:55652/api/sensor/scan'),
+      headers: {'Content-Type': 'application/json'},
     );
 
-    Navigator.pushNamed(context, '/scanning');
-    setState(() => _isLoading = false);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      // สมมติ data['lab'] คือค่า LAB color space ที่อยากโชว์ (ต้องปรับตาม backend)
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Scan success! Showing color...'),
+          backgroundColor: AppColors.successGreen,
+        ),
+      );
+      // ส่งค่าไปหน้าถัดไป พร้อมกับข้อมูล LAB ที่ได้
+      Navigator.pushNamed(context, '/scanning', arguments: data['lab']);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Scan failed: ${response.statusCode}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Network error: $e'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+  if (mounted) setState(() => _isLoading = false);
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     const CircleAvatar(
                       radius: 30,
-                      backgroundImage: AssetImage('assets/images/profile.jpg'),
+                      backgroundImage: AssetImage('assets/profile.jpg'),
                     ),
                     const SizedBox(width: 12),
                     const Column(

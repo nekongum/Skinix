@@ -11,6 +11,19 @@ class MixingScreen extends StatefulWidget {
 class _MixingScreenState extends State<MixingScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+int matchedIndex = 0;
+
+@override
+void didChangeDependencies() {
+  super.didChangeDependencies();
+  final args = ModalRoute.of(context)?.settings.arguments;
+  if (args != null &&
+      args is Map<String, dynamic> &&
+      args.containsKey('matchedIndex')) {
+    matchedIndex = args['matchedIndex'] ?? 0;
+  }
+}
+
 
   @override
   void initState() {
@@ -22,10 +35,18 @@ class _MixingScreenState extends State<MixingScreen>
       duration: const Duration(seconds: 3),
     )..forward();
 
-    // 🔹 หลังจากครบเวลาให้ไปหน้า ReadyScreen
+    // ❗ ย้าย pushReplacementNamed ไป didChangeDependencies ไม่ได้
+    // ดังนั้น delay 3 วิ แล้วค่อยส่ง matchedIndex ไป ReadyScreen
     Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) Navigator.pushReplacementNamed(context, '/ready');
-    });
+  if (mounted) {
+    Navigator.pushReplacementNamed(
+      context,
+      '/ready',
+      arguments: {'matchedIndex': matchedIndex}, // ส่ง matchedIndex ไป
+    );
+  }
+});
+
   }
 
   @override
@@ -48,7 +69,6 @@ class _MixingScreenState extends State<MixingScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 🔸 หัวข้อด้านบน
                 const Text(
                   "Mixing your perfect foundation...",
                   textAlign: TextAlign.center,
@@ -58,9 +78,10 @@ class _MixingScreenState extends State<MixingScreen>
                     fontWeight: FontWeight.w500,
                   ),
                 ),
+
                 SizedBox(height: screenHeight * 0.05),
 
-                // 🔸 วงกลมแสดง progress พร้อมไอคอนแปรง
+                // 🔸 วงกลม progress
                 AnimatedBuilder(
                   animation: _controller,
                   builder: (context, child) {
