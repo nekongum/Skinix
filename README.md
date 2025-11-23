@@ -9,3 +9,6 @@ npm run dev
 cd SKINIX\skinix-frontend  
 flutter pub get  
 flutter run -d chrome
+
+username : pim@test.com
+password : 123456
